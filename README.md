@@ -1,7 +1,7 @@
 # Incident Management System (IMS)
 
-**GitHub:** https://github.com/YOUR_USERNAME/incident-management-system  
-**Author:** Your Full Name
+**GitHub:** https://github.com/siriuslycoding/incident-management-system
+**Author:** Anushree Kamath
 
 ## Project Description
 
