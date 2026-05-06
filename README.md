@@ -61,7 +61,7 @@ IMS is a production-grade incident management platform that ingests high-volume 
 
 ```bash
 # Start all infrastructure and services
-docker compose up --build
+docker compose up --build -d
 
 # Frontend will be available at:
 open http://localhost:3000
