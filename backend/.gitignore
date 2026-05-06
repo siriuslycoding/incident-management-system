@@ -1,0 +1,18 @@
+# WAL files — runtime-generated, not committed
+wal/
+*.log
+
+# Node
+node_modules/
+dist/
+
+# Prisma
+prisma/migrations/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

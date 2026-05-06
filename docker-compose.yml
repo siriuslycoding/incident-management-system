@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ims
+      POSTGRES_PASSWORD: ims
+      POSTGRES_DB: ims
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://ims:ims@postgres:5432/ims
+      MONGO_URL: mongodb://mongo:27017/ims
+      REDIS_URL: redis://redis:6379
+      PORT: 3001
+      QUEUE_MAX_SIZE: 50000
+      WAL_PATH: /app/wal/signals.log
+    depends_on:
+      - postgres
+      - mongo
+      - redis
+    volumes:
+      - wal_data:/app/wal
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:3001
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
+  mongo_data:
+  wal_data:

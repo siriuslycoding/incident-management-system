@@ -1,0 +1,75 @@
+// backend/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model WorkItem {
+  id              String      @id @default(uuid())
+  componentId     String      @map("component_id")
+  componentType   String      @map("component_type")
+  priority        String      // P0 | P1 | P2
+  state           String      @default("OPEN") // OPEN | INVESTIGATING | RESOLVED | CLOSED
+  fingerprint     String?     // hash for recurrence detection
+  suggestedRcaId  String?     @map("suggested_rca_id")
+  isPredicted     Boolean     @default(false) @map("is_predicted") // blast radius prediction
+  signalCount     Int         @default(1) @map("signal_count")
+  startTime       DateTime    @default(now()) @map("start_time")
+  resolvedAt      DateTime?   @map("resolved_at")
+  closedAt        DateTime?   @map("closed_at")
+  mttrSeconds     Int?        @map("mttr_seconds")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  rca             Rca?
+  relatedTo       WorkItem?   @relation("RelatedIncidents", fields: [suggestedRcaId], references: [id])
+  relatedFrom     WorkItem[]  @relation("RelatedIncidents")
+
+  @@index([componentId])
+  @@index([state])
+  @@index([fingerprint])
+  @@index([createdAt])
+  @@map("work_items")
+}
+
+model Rca {
+  id               String    @id @default(uuid())
+  workItemId       String    @unique @map("work_item_id")
+  rootCauseCategory String   @map("root_cause_category")
+  rootCauseDetail  String    @map("root_cause_detail")
+  fixApplied       String    @map("fix_applied")
+  preventionSteps  String    @map("prevention_steps")
+  incidentStart    DateTime  @map("incident_start")
+  incidentEnd      DateTime  @map("incident_end")
+  submittedBy      String    @default("engineer") @map("submitted_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  workItem         WorkItem  @relation(fields: [workItemId], references: [id])
+
+  @@map("rca_records")
+}
+
+model CacheOutbox {
+  id        Int       @id @default(autoincrement())
+  redisKey  String    @map("redis_key")
+  value     String    // JSON stringified
+  operation String    @default("SET") // SET | DELETE
+  processed Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([processed, createdAt])
+  @@map("cache_outbox")
+}
+
+model SignalMetric {
+  id          Int       @id @default(autoincrement())
+  ts          DateTime  @default(now())
+  count       Int
+  componentId String    @map("component_id")
+
+  @@index([ts])
+  @@index([componentId, ts])
+  @@map("signal_metrics")
+}
